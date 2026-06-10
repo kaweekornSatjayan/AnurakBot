@@ -1,7 +1,8 @@
 require('dotenv').config();
 const { 
     Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, 
-    ModalBuilder, TextInputBuilder, TextInputStyle, Events 
+    ModalBuilder, TextInputBuilder, TextInputStyle, 
+    StringSelectMenuBuilder, Events 
 } = require('discord.js');
 
 const client = new Client({ 
@@ -41,10 +42,12 @@ client.once(Events.ClientReady, async (c) => {
     }
 });
 
-// เมื่อมีการโต้ตอบ (กดปุ่ม หรือ กด Submit Modal)
+// เมื่อมีการโต้ตอบ (กดปุ่ม, กด Submit Modal หรือ เลือก Dropdown)
 client.on(Events.InteractionCreate, async (interaction) => {
     
-    // 1. ถ้าผู้ใช้กดปุ่มลงทะเบียน -> ให้แสดง Modal
+    // --------------------------------------------------
+    // สเต็ปที่ 1: ถ้าผู้ใช้กดปุ่มลงทะเบียน -> ให้แสดง Modal
+    // --------------------------------------------------
     if (interaction.isButton() && interaction.customId === 'register_btn') {
         const modal = new ModalBuilder()
             .setCustomId('register_modal')
@@ -74,7 +77,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
         await interaction.showModal(modal);
     }
 
-    // 2. ถ้าผู้ใช้กด Submit Modal ส่งข้อมูลมา
+    // --------------------------------------------------
+    // สเต็ปที่ 2: ถ้าผู้ใช้กด Submit Modal ส่งข้อมูลมา
+    // --------------------------------------------------
     if (interaction.isModalSubmit() && interaction.customId === 'register_modal') {
         const campName = interaction.fields.getTextInputValue('camp_input');
         const nickName = interaction.fields.getTextInputValue('name_input');
@@ -85,20 +90,70 @@ client.on(Events.InteractionCreate, async (interaction) => {
         try {
             // เปลี่ยนชื่อ
             await interaction.member.setNickname(newNickname);
-            // ให้ยศ Member
+            
+            // ให้ยศ Member หลัก (เพื่อให้มองเห็นห้องอื่นๆ)
             await interaction.member.roles.add(process.env.ROLE_ID);
 
-            // ตอบกลับแบบเห็นคนเดียว (Ephemeral)
+            // สร้างเมนู Dropdown ให้เลือกสายที่สนใจ
+            const roleSelect = new StringSelectMenuBuilder()
+                .setCustomId('role_select_menu')
+                .setPlaceholder('คลิกเพื่อเลือกสายที่คุณสนใจ (เลือกได้มากกว่า 1)')
+                .setMinValues(1)
+                .setMaxValues(2) // อนุญาตให้เลือกได้สูงสุด 2 อัน
+                .addOptions(
+                    {
+                        label: 'สายดูนก (Bird Watcher)',
+                        description: 'รับยศนี้เพื่อเข้าห้องแชร์พิกัดและคุยเรื่องดูนก',
+                        emoji: '🦅',
+                        value: process.env.ROLE_ID_2 // ใช้ ID ยศที่ 2 จาก .env
+                    },
+                    {
+                        label: 'สายถ่ายภาพ (Photographer)',
+                        description: 'รับยศนี้เพื่อเข้าห้องแชร์เทคนิคถ่ายรูปและแต่งรูป',
+                        emoji: '📸',
+                        value: process.env.ROLE_ID_3 // ใช้ ID ยศที่ 3 จาก .env
+                    }
+                );
+
+            const row = new ActionRowBuilder().addComponents(roleSelect);
+
+            // ตอบกลับแบบเห็นคนเดียว พร้อมแนบ Dropdown ไปด้วย
             await interaction.reply({ 
-                content: `✅ ยืนยันตัวตนสำเร็จ! เปลี่ยนชื่อเป็น **${newNickname}** เรียบร้อยแล้ว ไปคุยที่ห้องอื่นได้เลยครับ`, 
+                content: `✅ เปลี่ยนชื่อเป็น **${newNickname}** เรียบร้อย!\n\n**ขั้นตอนสุดท้าย:** โปรดเลือกสายความสนใจของคุณด้านล่างนี้ครับ 👇`, 
+                components: [row],
                 ephemeral: true 
             });
 
         } catch (error) {
             console.error(error);
-            // ดัก Error กรณีบอทยศต่ำกว่าคนโดนเปลี่ยนชื่อ หรือไม่มีสิทธิ์
             await interaction.reply({ 
-                content: '❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ กรุณาติดต่อ Admin ครับ', 
+                content: '❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ กรุณาติดต่อ Admin ครับ (เช็คลำดับยศบอทด้วยนะ!)', 
+                ephemeral: true 
+            });
+        }
+    }
+
+    // --------------------------------------------------
+    // สเต็ปที่ 3: ดักจับตอนที่สมาชิกกดเลือกเมนู Dropdown
+    // --------------------------------------------------
+    if (interaction.isStringSelectMenu() && interaction.customId === 'role_select_menu') {
+        try {
+            // ดึงค่า ID ของยศที่สมาชิกเลือก (มาเป็น Array)
+            const selectedRoles = interaction.values;
+
+            // มอบยศที่เลือกให้สมาชิก
+            await interaction.member.roles.add(selectedRoles);
+
+            // อัปเดตข้อความเพื่อลบ Dropdown ออกและแจ้งว่าเสร็จสิ้น
+            await interaction.update({ 
+                content: '🎉 ยืนยันตัวตนสมบูรณ์! มอบยศตามความสนใจเรียบร้อยแล้ว เข้าไปพูดคุยในห้องต่างๆ ได้เลยครับ', 
+                components: [] // ใส่ Array ว่างเพื่อลบ Dropdown ทิ้ง
+            });
+        } catch (error) {
+            console.error(error);
+            // ใช้ followUp เผื่อว่า update พัง จะได้ยังแจ้งเตือนได้
+            await interaction.followUp({ 
+                content: '❌ เกิดข้อผิดพลาดในการมอบยศ กรุณาติดต่อ Admin ครับ', 
                 ephemeral: true 
             });
         }
@@ -106,6 +161,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.login(process.env.BOT_TOKEN);
+
 // --- โค้ดสำหรับเลี้ยงบอทบน Render ---
 const http = require('http');
 http.createServer((req, res) => res.end('Bot is alive!')).listen(process.env.PORT || 3000);

@@ -113,15 +113,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 .setMaxValues(2)
                 .addOptions(
                     {
-                        label: 'สายดูนก (Bird Watcher)',
-                        description: 'รับยศนี้เพื่อเข้าห้องแชร์พิกัดและคุยเรื่องดูนก',
+                        label: 'แก๊งค์อนุรักษ์69',
+                        description: 'สมาชิกปีการศึกษา69',
                         emoji: '🦅',
+                        value: process.env.ROLE_ID
+                    }
+                    {
+                        label: 'แก๊งค์อนุรักษ์รุ่นโต๋',
+                        description: 'ศิษย์เก่า and the gang',
+                        emoji: '',
                         value: process.env.ROLE_ID_2
                     },
                     {
-                        label: 'สายถ่ายภาพ (Photographer)',
-                        description: 'รับยศนี้เพื่อเข้าห้องแชร์เทคนิคถ่ายรูปและแต่งรูป',
-                        emoji: '📸',
+                        label: 'บอด69',
+                        description: 'ลู้มือ',
+                        emoji: '',
                         value: process.env.ROLE_ID_3
                     }
                 );

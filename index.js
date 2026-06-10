@@ -108,7 +108,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
             const roleSelect = new StringSelectMenuBuilder()
                 .setCustomId('role_select_menu')
-                .setPlaceholder('คลิกเพื่อเลือกสายที่คุณสนใจ (เลือกได้มากกว่า 1)')
+                .setPlaceholder('เลือกแก๊งค์กันเร้ว')
                 .setMinValues(1)
                 .setMaxValues(2)
                 .addOptions(
@@ -123,7 +123,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         value: process.env.ROLE_ID_2
                     },
                     {
-                        label: 'บอด69',
+                        label: 'แก๊งค์บอด69',
                         description: 'ลู้มือ',
                         value: process.env.ROLE_ID_3
                     }

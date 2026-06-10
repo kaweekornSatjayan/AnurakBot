@@ -115,19 +115,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
                     {
                         label: 'แก๊งค์อนุรักษ์69',
                         description: 'สมาชิกปีการศึกษา69',
-                        emoji: '🦅',
                         value: process.env.ROLE_ID
                     },
                     {
                         label: 'แก๊งค์อนุรักษ์รุ่นโต๋',
                         description: 'ศิษย์เก่า and the gang',
-                        emoji: '',
                         value: process.env.ROLE_ID_2
                     },
                     {
                         label: 'บอด69',
                         description: 'ลู้มือ',
-                        emoji: '',
                         value: process.env.ROLE_ID_3
                     }
                 );

@@ -117,7 +117,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         description: 'สมาชิกปีการศึกษา69',
                         emoji: '🦅',
                         value: process.env.ROLE_ID
-                    }
+                    },
                     {
                         label: 'แก๊งค์อนุรักษ์รุ่นโต๋',
                         description: 'ศิษย์เก่า and the gang',

@@ -132,7 +132,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             const row = new ActionRowBuilder().addComponents(roleSelect);
 
             await interaction.reply({ 
-                content: `✅ เปลี่ยนชื่อเป็น **${newNickname}** เรียบร้อย!\n\n**ขั้นตอนสุดท้าย:** โปรดเลือกสายความสนใจของคุณด้านล่างนี้ครับ 👇`, 
+                content: `✅ เปลี่ยนชื่อเป็น **${newNickname}** เรียบร้อย!\n\n**ขั้นตอนสุดท้าย:** แก๊งค์ไหนอะเรา จิ้มๆเลือกมาซิ👇`, 
                 components: [row],
                 ephemeral: true 
             });

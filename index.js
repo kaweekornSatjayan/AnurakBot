@@ -53,7 +53,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // ช่องกรอกชื่อค่าย
         const campInput = new TextInputBuilder()
             .setCustomId('camp_input')
-            .setLabel("ชื่อค่าย (เช่น ค่ายรักษ์เต่า)")
+            .setLabel("ชื่อค่าย (เช่น ผาแต้ม ทุ่งใหญ่)")
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 

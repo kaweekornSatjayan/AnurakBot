@@ -19,6 +19,7 @@ const client = new Client({
 // --------------------------------------------------
 client.once(Events.ClientReady, async (c) => {
     console.log(`✅ บอท ${c.user.tag} พร้อมทำงานแล้ว!`);
+    console.log(`🔎 กำลังตรวจสอบช่อง ${process.env.CHANNEL_ID} เพื่อส่งปุ่มลงทะเบียน`);
 
     const channel = client.channels.cache.get(process.env.CHANNEL_ID);
     if (!channel) return console.log('❌ หาห้องไม่เจอ ตรวจสอบ CHANNEL_ID ใน .env');
@@ -47,6 +48,7 @@ client.once(Events.ClientReady, async (c) => {
 // 🌟 2. [เพิ่มใหม่] เมื่อมีคนเข้าเซิร์ฟเวอร์ ให้แท็กเรียกและส่งปุ่มให้
 // --------------------------------------------------
 client.on(Events.GuildMemberAdd, async (member) => {
+    console.log(`📥 GuildMemberAdd event: ${member.user.tag}`);
     const channel = member.guild.channels.cache.get(process.env.CHANNEL_ID);
     if (!channel) return;
 

@@ -60,7 +60,7 @@ client.on(Events.GuildMemberAdd, async (member) => {
 
     // บอทจะแท็กชื่อคนที่พึ่งเข้ามาใหม่
     await channel.send({ 
-        content: `👋 ยินดีต้อนรับ ${member}! รบกวนกดปุ่มด้านล่างนี้เพื่อกรอกข้อมูลเข้าชมรมนะครับ 👇`, 
+        content: `👋 ยินดีต้อนรับ ${member}! รบกวนกดปุ่มด้านล่างนี้เพื่อกรอกข้อมูลเข้าชมรมน้าา 👇`, 
         components: [row] 
     });
 });
@@ -70,37 +70,74 @@ client.on(Events.GuildMemberAdd, async (member) => {
 // --------------------------------------------------
 client.on(Events.InteractionCreate, async (interaction) => {
     
-    // สเต็ปที่ 1: กดปุ่มลงทะเบียน -> แสดง Modal
+    // สเต็ปที่ 1: กดปุ่มลงทะเบียน -> เลือกค่าย+ปี หรือศิษย์เก่า
     if (interaction.isButton() && interaction.customId === 'register_btn') {
-        const modal = new ModalBuilder()
-            .setCustomId('register_modal')
-            .setTitle('ฟอร์มลงทะเบียนชมรมอนุรักษ์');
+        const campSelect = new StringSelectMenuBuilder()
+            .setCustomId('camp_select_menu')
+            .setPlaceholder('มาจากค่ายไหนน (ถ้าจบแล้วให้ใส่ปีที่จบน้า)')
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions(
+                { label: 'ดิ๊งด่อง 66', description: 'เลือกค่าย 66', value: 'ดิ๊งด่อง 66' },
+                { label: 'ทุ่งกิ๊ก 66', description: 'เลือกค่าย 66', value: 'ทุ่งกิ๊ก 66' },
+                { label: 'น้ำตกหงาว 66', description: 'เลือกค่าย 66', value: 'น้ำตกหงาว 66' },
+                { label: 'กุยบุรี 67', description: 'เลือกค่าย 67', value: 'กุยบุรี 67' },
+                { label: 'ผาแดง 67', description: 'เลือกค่าย 67', value: 'ผาแดง 67' },
+                { label: 'แก่งกระจาน 67', description: 'เลือกค่าย 67', value: 'แก่งกระจาน 67' },
+                { label: 'แม่เมย 67', description: 'เลือกค่าย 67', value: 'แม่เมย 67' },
+                { label: 'เขาแหลม 68', description: 'เลือกค่าย 68', value: 'เขาแหลม 68' },
+                { label: 'ผาแต้ม 68', description: 'เลือกค่าย 68', value: 'ผาแต้ม 68' },
+                { label: 'ทุ่งใหญ่ 68', description: 'เลือกค่าย 68', value: 'ทุ่งใหญ่ 68' },
+                { label: 'จบแล้วว (ระบุปีที่จบ)', description: 'กรอกปีที่จบเอง', value: 'alumni' }
+            );
 
-        const campInput = new TextInputBuilder()
-            .setCustomId('camp_input')
-            .setLabel("ชื่อค่าย (เช่น ผาแต้ม ทุ่งใหญ่)")
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true);
+        const row = new ActionRowBuilder().addComponents(campSelect);
+
+        await interaction.reply({ 
+            content: 'กรุณาเลือกค่าย+ปี หรือศิษย์เก่า แล้วกรอกชื่อเล่นในขั้นตอนถัดไป', 
+            components: [row],
+            ephemeral: true
+        });
+        return;
+    }
+
+    // สเต็ปที่ 2: เลือกค่าย+ปีหรือศิษย์เก่า -> แสดง Modal เพื่อกรอกชื่อ
+    if (interaction.isStringSelectMenu() && interaction.customId === 'camp_select_menu') {
+        const selectedCamp = interaction.values[0];
+        const modal = new ModalBuilder()
+            .setCustomId(`register_modal:${selectedCamp}`)
+            .setTitle('ฟอร์มลงทะเบียนชมรมอนุรักษ์');
 
         const nameInput = new TextInputBuilder()
             .setCustomId('name_input')
-            .setLabel("ชื่อเล่น")
+            .setLabel('ชื่อเล่น / ชื่อที่ต้องการให้ตั้ง')
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(campInput), 
-            new ActionRowBuilder().addComponents(nameInput)
-        );
+        modal.addComponents(new ActionRowBuilder().addComponents(nameInput));
+
+        if (selectedCamp === 'alumni') {
+            const gradYearInput = new TextInputBuilder()
+                .setCustomId('grad_year_input')
+                .setLabel('ปีที่จบ (เช่น 63, 64, 65)')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+
+            modal.addComponents(new ActionRowBuilder().addComponents(gradYearInput));
+        }
 
         await interaction.showModal(modal);
+        return;
     }
 
-    // สเต็ปที่ 2: กด Submit Modal -> เปลี่ยนชื่อ, ให้ยศหลัก, โชว์ Dropdown
-    if (interaction.isModalSubmit() && interaction.customId === 'register_modal') {
-        const campName = interaction.fields.getTextInputValue('camp_input');
+    // สเต็ปที่ 3: กด Submit Modal -> เปลี่ยนชื่อ, ให้ยศหลัก, โชว์ Dropdown
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('register_modal:')) {
+        const selectedYear = interaction.customId.split(':')[1];
         const nickName = interaction.fields.getTextInputValue('name_input');
-        const newNickname = `[${campName}] ${nickName}`;
+        const yearPrefix = selectedYear === 'alumni'
+            ? interaction.fields.getTextInputValue('grad_year_input')
+            : selectedYear;
+        const newNickname = `[${yearPrefix}] ${nickName}`;
 
         try {
             await interaction.member.setNickname(newNickname);
@@ -118,7 +155,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         value: process.env.ROLE_ID
                     },
                     {
-                        label: 'แก๊งค์อนุรักษ์รุ่นโต๋',
+                        label: 'แก๊งค์พี่กระทิง(ศิษย์เก่า)',
                         description: 'ศิษย์เก่า and the gang',
                         value: process.env.ROLE_ID_2
                     },
@@ -153,7 +190,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await interaction.member.roles.add(selectedRoles);
 
             await interaction.update({ 
-                content: '🎉 ยืนยันตัวตนสมบูรณ์! มอบยศตามความสนใจเรียบร้อยแล้ว เข้าไปพูดคุยในห้องต่างๆ ได้เลยครับ', 
+                content: '🎉 ยืนยันตัวตนสมบูรณ์! เข้าไปพูดคุยในห้องต่างๆ ได้เลยย', 
                 components: [] 
             });
         } catch (error) {

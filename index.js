@@ -23,6 +23,22 @@ const client = new Client({
 });
 
 // =====================================================================
+// โค้ดส่วนที่เพิ่มเข้ามา: ดักจับ Error และ Debug หลังบ้าน
+// =====================================================================
+client.on('error', error => {
+    console.error('❌ เกิด Error ที่ตัว Client:', error);
+});
+
+client.on('shardError', error => {
+    console.error('❌ เกิดปัญหาการเชื่อมต่อ Websocket:', error);
+});
+
+// ดึงรายละเอียดการเชื่อมต่อของ Discord.js มาแสดงใน Log ทั้งหมด
+client.on('debug', info => {
+    console.log('⚙️ [Debug]:', info);
+});
+
+// =====================================================================
 // Event: Client Ready
 // Triggered once when the bot successfully logs in.
 // =====================================================================

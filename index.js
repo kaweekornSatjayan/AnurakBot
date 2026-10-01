@@ -133,7 +133,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 { label: 'เขาแหลม 68', description: 'เลือกค่าย 68', value: 'เขาแหลม 68' },
                 { label: 'ผาแต้ม 68', description: 'เลือกค่าย 68', value: 'ผาแต้ม 68' },
                 { label: 'ทุ่งใหญ่ 68', description: 'เลือกค่าย 68', value: 'ทุ่งใหญ่ 68' },
-                { label: 'ดูนก', description: 'เลือกค่าย 68', value: 'ดูนก' },
+                { label: 'ดูนก', description: 'ดูนก', value: 'ดูนก' },
                 { label: 'จบแล้วว (ระบุปีที่จบ)', description: 'กรอกปีที่จบเอง', value: 'alumni' }
             );
 
@@ -189,8 +189,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
         // Determine the prefix based on alumni vs current student
         const prefix = selectedCamp === 'alumni'
             ? interaction.fields.getTextInputValue('grad_year_input')
-            : selectedCamp;
-            
+            : selectedCamp === 'ดูนก'
+                ? 'ดูนก'
+                : selectedCamp;
+
         const newNickname = `[${prefix}] ${nickname}`;
 
         try {
@@ -220,8 +222,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                         value: process.env.ROLE_ID_3
                     },
                     {
-                        label: 'แก๊งค์ดูนกดูใจดูอะไรก็เลยดูนก',
-                        description: 'ดูนกแล้วเหลือดูใจส์',
+                        label: 'ดูนก',
+                        description: 'ให้ยศ ROLE_ID_4',
                         value: process.env.ROLE_ID_4
                     }
                 );

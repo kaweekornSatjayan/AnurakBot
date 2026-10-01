@@ -197,28 +197,38 @@ client.on(Events.InteractionCreate, async (interaction) => {
             await interaction.member.setNickname(newNickname);
             await interaction.member.roles.add(process.env.ROLE_ID);
 
+            const gangOptions = [
+                {
+                    label: 'แก๊งค์อนุรักษ์69',
+                    description: 'สมาชิกปีการศึกษา69',
+                    value: process.env.ROLE_ID
+                },
+                {
+                    label: 'แก๊งค์พี่กระทิง(ศิษย์เก่า)',
+                    description: 'ศิษย์เก่า and the gang',
+                    value: process.env.ROLE_ID_2
+                },
+                {
+                    label: 'แก๊งค์บอด69',
+                    description: 'ลู้มือ',
+                    value: process.env.ROLE_ID_3
+                }
+            ];
+
+            if (process.env.ROLE_ID_4) {
+                gangOptions.push({
+                    label: 'แก๊งค์ดูนกดูใจดูอะไรก็เลยดูนก',
+                    description: 'ดูนกแล้วเหลือดูใจส์',
+                    value: process.env.ROLE_ID_4
+                });
+            }
+
             const gangSelectMenu = new StringSelectMenuBuilder()
                 .setCustomId('role_select_menu')
                 .setPlaceholder('เลือกแก๊งค์กันเร้ว')
                 .setMinValues(1)
                 .setMaxValues(2)
-                .addOptions(
-                    {
-                        label: 'แก๊งค์อนุรักษ์69',
-                        description: 'สมาชิกปีการศึกษา69',
-                        value: process.env.ROLE_ID
-                    },
-                    {
-                        label: 'แก๊งค์พี่กระทิง(ศิษย์เก่า)',
-                        description: 'ศิษย์เก่า and the gang',
-                        value: process.env.ROLE_ID_2
-                    },
-                    {
-                        label: 'แก๊งค์บอด69',
-                        description: 'ลู้มือ',
-                        value: process.env.ROLE_ID_3
-                    }
-                );
+                .addOptions(gangOptions);
 
             const actionRow = new ActionRowBuilder().addComponents(gangSelectMenu);
 

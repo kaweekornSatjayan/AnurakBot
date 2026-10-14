@@ -152,7 +152,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const nicknameInput = new TextInputBuilder()
             .setCustomId('name_input')
             .setLabel('ตั้งชื่อค้าบ')
-            .setPlaceholder('ตั้งเป็น [ชื่อค่าย ปี]ชื่อเล่น ex. [สกิบิดี้ 67]เซ่นซีวิก')
+            .setPlaceholder('กรอกชื่อเล่นของคุณ เช่น เซ่นซีวิก')
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
@@ -184,8 +184,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 ? 'ดูนก'
                 : selectedCamp;
 
-        // ป้องกัน Error ชื่อยาวเกิน 32 ตัวอักษร (ตามกฎ Discord API)
+        // 💡 เลือกรูปแบบชื่อที่ต้องการใช้งาน:
+        // รูปแบบที่ 1: มีชื่อค่ายนำหน้า เช่น [กุยบุรี 67] เซ่นซีวิก
         const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
+
+        // รูปแบบที่ 2: แสดงเฉพาะชื่อเล่นอย่างเดียว (หากต้องการใช้แบบนี้ ให้ลบ // ด้านหน้าบรรทัดล่างสุดนี้ออก)
+        // const newNickname = nickname.slice(0, 32);
 
         try {
             // อัปเดตชื่อเล่น
@@ -196,7 +200,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 await interaction.member.roles.add(process.env.ROLE_ID);
             }
 
-            // เตรียมค่า Role ID และระบบป้องกัน Value ซ้ำ/ว่างเปล่า
+            // จัดการ Role ID และป้องกัน Value ใน Dropdown ซ้ำ/ว่างเปล่า
             const role1 = process.env.ROLE_ID || 'role_1';
             const role2 = process.env.ROLE_ID_2 || 'role_2';
             const role3 = process.env.ROLE_ID_3 || 'role_3';
@@ -240,9 +244,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         } catch (error) {
             console.error('❌ Error during Step 3:', error);
-            // แสดง ErrorMessage ชัดเจนเพื่อให้วินิจฉัยปัญหาได้ง่ายขึ้น
             return await interaction.reply({ 
-                content: `❌ เกิดข้อผิดพลาด: \`${error.message}\``, 
+                content: `❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: \`${error.message}\``, 
                 ephemeral: true 
             });
         }
@@ -253,7 +256,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     // -----------------------------------------------------------------
     if (interaction.isStringSelectMenu() && interaction.customId === 'role_select_menu') {
         try {
-            // กรองเอาเฉพาะ ID ยศที่ถูกต้อง (ไม่ติด fallback string)
+            // กรองเอาเฉพาะ ID ยศที่ถูกต้อง
             const selectedRoles = interaction.values.filter(roleId => !roleId.includes('_fallback') && !roleId.startsWith('role_'));
             
             if (selectedRoles.length > 0) {

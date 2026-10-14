@@ -133,6 +133,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 { label: 'เขาแหลม 68', description: 'เลือกค่าย 68', value: 'เขาแหลม 68' },
                 { label: 'ผาแต้ม 68', description: 'เลือกค่าย 68', value: 'ผาแต้ม 68' },
                 { label: 'ทุ่งใหญ่ 68', description: 'เลือกค่าย 68', value: 'ทุ่งใหญ่ 68' },
+                { label: 'ซับลังกา 69', description: 'เลือกค่าย 69', value: 'ซับลังกา 69' },
                 { label: 'ดูนก', description: 'ดูนก', value: 'ดูนก' },
                 { label: 'จบแล้วว (ระบุปีที่จบ)', description: 'กรอกปีที่จบเอง', value: 'alumni' }
             );

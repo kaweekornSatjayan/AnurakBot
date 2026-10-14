@@ -160,7 +160,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         const nicknameInput = new TextInputBuilder()
             .setCustomId('name_input')
-            .setLabel('ชื่อเล่น / ชื่อที่ต้องการให้ตั้ง')
+            .setLabel('ตั้งชื่อ ในรูปแบบ [ชื่อค่าย ปี] ชื่อเล่น ex. [สกูปปี้ดู 67] ซิกเซเว่น')
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 

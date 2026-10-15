@@ -114,7 +114,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const nicknameInput = new TextInputBuilder()
             .setCustomId('name_input')
             .setLabel('ตั้งชื่อค้าบ')
-            .setPlaceholder('กรอกชื่อเล่น เช่น เซ่นซีวิก')
+            .setPlaceholder('ตั้งชื่อแบบ [ชื่อค่าย ปีค่าย] ชื่อเล่น ex [สกิบิดี้ 67] ซิกเซเว่น')
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
@@ -133,21 +133,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return await interaction.showModal(modal);
     }
 
-    // Step 3: ส่ง Modal -> เปลี่ยนชื่อ
+    // Step 3: ส่ง Modal -> เปลี่ยนชื่อตามที่พิมพ์มาตรงๆ
     if (interaction.isModalSubmit() && interaction.customId.startsWith('register_modal:')) {
         await interaction.deferReply({ ephemeral: true });
 
-        const selectedCamp = interaction.customId.split(':')[1];
         const nickname = interaction.fields.getTextInputValue('name_input');
         
-        const prefix = selectedCamp === 'alumni'
-            ? interaction.fields.getTextInputValue('grad_year_input')
-            : selectedCamp === 'ดูนก'
-                ? 'ดูนก'
-                : selectedCamp;
-
-        // ใช้ Backticks ครอบ string template
-        const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
+        // ดึงชื่อที่สมาชิกพิมพ์มาใช้งานตรงๆ ไม่เติม Prefix เพิ่มเติม
+        const newNickname = nickname.trim().slice(0, 32);
 
         try {
             await interaction.member.setNickname(newNickname);

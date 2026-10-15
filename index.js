@@ -114,7 +114,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const nicknameInput = new TextInputBuilder()
             .setCustomId('name_input')
             .setLabel('ตั้งชื่อค้าบ')
-            .setPlaceholder('กรอกชื่อเล่นของคุณ เช่น เซ่นซีวิก')
+            .setPlaceholder('กรอกชื่อเล่น เช่น เซ่นซีวิก')
             .setStyle(TextInputStyle.Short)
             .setRequired(true);
 
@@ -133,14 +133,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return await interaction.showModal(modal);
     }
 
-    // Step 3: ส่ง Modal -> เปลี่ยนชื่อ (ใช้เฉพาะชื่อเล่น ไม่ใส่ชื่อค่าย)
+    // Step 3: ส่ง Modal -> เปลี่ยนชื่อโดยมี [ชื่อค่าย] นำหน้า
     if (interaction.isModalSubmit() && interaction.customId.startsWith('register_modal:')) {
         await interaction.deferReply({ ephemeral: true });
 
+        const selectedCamp = interaction.customId.split(':')[1];
         const nickname = interaction.fields.getTextInputValue('name_input');
         
-        // 🟢 ตั้งชื่อเป็นชื่อเล่นเพียวๆ แน่นอน (ไม่มี [ชื่อค่าย] นำหน้า)
-        const newNickname = nickname.trim().slice(0, 32);
+        const prefix = selectedCamp === 'alumni'
+            ? interaction.fields.getTextInputValue('grad_year_input')
+            : selectedCamp === 'ดูนก'
+                ? 'ดูนก'
+                : selectedCamp;
+
+        // 🟢 รวม Prefix ชื่อค่าย + ชื่อเล่น (จำกัดความยาวรวมไม่เกิน 32 ตัวอักษร)
+        const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
 
         try {
             await interaction.member.setNickname(newNickname);

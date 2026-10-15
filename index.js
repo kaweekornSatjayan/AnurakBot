@@ -146,6 +146,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 ? 'ดูนก'
                 : selectedCamp;
 
+        // ใช้ Backticks ครอบ string template
         const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
 
         try {

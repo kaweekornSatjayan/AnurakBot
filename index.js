@@ -133,7 +133,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return await interaction.showModal(modal);
     }
 
-    // Step 3: ส่ง Modal -> เปลี่ยนชื่อโดยมี [ชื่อค่าย] นำหน้า
+    // Step 3: ส่ง Modal -> เปลี่ยนชื่อ
     if (interaction.isModalSubmit() && interaction.customId.startsWith('register_modal:')) {
         await interaction.deferReply({ ephemeral: true });
 
@@ -146,7 +146,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 ? 'ดูนก'
                 : selectedCamp;
 
-        // 🟢 รวม Prefix ชื่อค่าย + ชื่อเล่น (จำกัดความยาวรวมไม่เกิน 32 ตัวอักษร)
         const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
 
         try {

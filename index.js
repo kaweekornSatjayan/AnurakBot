@@ -12,50 +12,29 @@ const {
     Events 
 } = require('discord.js');
 
-// Initialize Discord Client with required intents
 const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers, // Required for GuildMemberAdd event
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent
     ] 
 });
 
-// =====================================================================
-// Error & Debug Listeners
-// =====================================================================
-client.on('error', error => {
-    console.error('❌ เกิด Error ที่ตัว Client:', error);
-});
+client.on('error', error => console.error('❌ เกิด Error ที่ตัว Client:', error));
+client.on('shardError', error => console.error('❌ เกิดปัญหาการเชื่อมต่อ Websocket:', error));
 
-client.on('shardError', error => {
-    console.error('❌ เกิดปัญหาการเชื่อมต่อ Websocket:', error);
-});
-
-client.on('debug', info => {
-    console.log('⚙️ [Debug]:', info);
-});
-
-// =====================================================================
-// Event: Client Ready
-// =====================================================================
 client.once(Events.ClientReady, async (readyClient) => {
     console.log(`✅ Bot \${readyClient.user.tag} is online and ready!`);
-    console.log(`🔎 Checking channel \${process.env.CHANNEL_ID} for the registration button...`);
 
     const channel = client.channels.cache.get(process.env.CHANNEL_ID);
-    if (!channel) {
-        return console.error('❌ Channel not found. Please verify CHANNEL_ID in the .env file.');
-    }
+    if (!channel) return console.error('❌ Channel not found.');
 
     const registerBtn = new ButtonBuilder()
         .setCustomId('register_btn')
         .setLabel('คลิกเพื่อลงทะเบียนเข้าชมรม')
         .setStyle(ButtonStyle.Success)
         .setEmoji('🌿');
-
-    const actionRow = new ActionRowBuilder().addComponents(registerBtn);
 
     try {
         const messages = await channel.messages.fetch({ limit: 10 });
@@ -64,21 +43,15 @@ client.once(Events.ClientReady, async (readyClient) => {
         if (!hasButton) {
             await channel.send({ 
                 content: 'ยินดีต้อนรับ! กรุณากดปุ่มด้านล่างเพื่อตั้งชื่อและเข้าสู่เซิร์ฟเวอร์', 
-                components: [actionRow] 
+                components: [new ActionRowBuilder().addComponents(registerBtn)] 
             });
-            console.log('✅ Registration button deployed successfully.');
         }
     } catch (error) {
-        console.error('❌ Error fetching messages or sending button:', error);
+        console.error('❌ Error deploying button:', error);
     }
 });
 
-// =====================================================================
-// Event: Guild Member Add
-// =====================================================================
 client.on(Events.GuildMemberAdd, async (member) => {
-    console.log(`📥 GuildMemberAdd event triggered for: \${member.user.tag}`);
-    
     const channel = member.guild.channels.cache.get(process.env.CHANNEL_ID);
     if (!channel) return;
 
@@ -88,26 +61,19 @@ client.on(Events.GuildMemberAdd, async (member) => {
         .setStyle(ButtonStyle.Success)
         .setEmoji('🌿');
 
-    const actionRow = new ActionRowBuilder().addComponents(registerBtn);
-
     try {
         await channel.send({ 
             content: `👋 ยินดีต้อนรับ \${member}! รบกวนกดปุ่มด้านล่างนี้เพื่อกรอกข้อมูลเข้าชมรมน้าา 👇`, 
-            components: [actionRow] 
+            components: [new ActionRowBuilder().addComponents(registerBtn)] 
         });
     } catch (error) {
-        console.error(`❌ Failed to send welcome message to \${member.user.tag}:`, error);
+        console.error(`❌ Failed welcome message:`, error);
     }
 });
 
-// =====================================================================
-// Event: Interaction Create
-// =====================================================================
 client.on(Events.InteractionCreate, async (interaction) => {
     
-    // -----------------------------------------------------------------
-    // Step 1: Registration Button Clicked -> Show Camp Selection Menu
-    // -----------------------------------------------------------------
+    // Step 1: ปุ่มลงทะเบียน -> แสดง Dropdown เลือกค่าย
     if (interaction.isButton() && interaction.customId === 'register_btn') {
         const campSelectMenu = new StringSelectMenuBuilder()
             .setCustomId('camp_select_menu')
@@ -130,18 +96,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 { label: 'จบแล้วว (ระบุปีที่จบ)', description: 'กรอกปีที่จบเอง', value: 'alumni' }
             );
 
-        const actionRow = new ActionRowBuilder().addComponents(campSelectMenu);
-
         return await interaction.reply({ 
             content: 'กรุณาเลือกค่าย+ปี หรือศิษย์เก่า แล้วกรอกชื่อเล่นในขั้นตอนถัดไป', 
-            components: [actionRow],
+            components: [new ActionRowBuilder().addComponents(campSelectMenu)],
             ephemeral: true
         });
     }
 
-    // -----------------------------------------------------------------
-    // Step 2: Camp Selected -> Show Modal for Nickname Input
-    // -----------------------------------------------------------------
+    // Step 2: เลือกค่าย -> เปิด Modal ตั้งชื่อ
     if (interaction.isStringSelectMenu() && interaction.customId === 'camp_select_menu') {
         const selectedCamp = interaction.values[0];
         
@@ -171,36 +133,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return await interaction.showModal(modal);
     }
 
-    // -----------------------------------------------------------------
-    // Step 3: Modal Submitted -> Rename, Give Base Role, Show Gang Menu
-    // -----------------------------------------------------------------
+    // Step 3: ส่ง Modal -> เปลี่ยนชื่อ (ใช้เฉพาะชื่อเล่น ไม่ใส่ชื่อค่าย)
     if (interaction.isModalSubmit() && interaction.customId.startsWith('register_modal:')) {
-        const selectedCamp = interaction.customId.split(':')[1];
+        await interaction.deferReply({ ephemeral: true });
+
         const nickname = interaction.fields.getTextInputValue('name_input');
         
-        const prefix = selectedCamp === 'alumni'
-            ? interaction.fields.getTextInputValue('grad_year_input')
-            : selectedCamp === 'ดูนก'
-                ? 'ดูนก'
-                : selectedCamp;
-
-        // 💡 เลือกรูปแบบชื่อที่ต้องการใช้งาน:
-        // รูปแบบที่ 1: มีชื่อค่ายนำหน้า เช่น [กุยบุรี 67] เซ่นซีวิก
-        const newNickname = `[${prefix}]${nickname}`.slice(0, 32);
-
-        // รูปแบบที่ 2: แสดงเฉพาะชื่อเล่นอย่างเดียว (หากต้องการใช้แบบนี้ ให้ลบ // ด้านหน้าบรรทัดล่างสุดนี้ออก)
-        // const newNickname = nickname.slice(0, 32);
+        // 🟢 ตั้งชื่อเป็นชื่อเล่นเพียวๆ แน่นอน (ไม่มี [ชื่อค่าย] นำหน้า)
+        const newNickname = nickname.trim().slice(0, 32);
 
         try {
-            // อัปเดตชื่อเล่น
             await interaction.member.setNickname(newNickname);
 
-            // มอบยศเริ่มต้น (ถ้ามี ROLE_ID กำหนดใน .env)
             if (process.env.ROLE_ID) {
                 await interaction.member.roles.add(process.env.ROLE_ID);
             }
 
-            // จัดการ Role ID และป้องกัน Value ใน Dropdown ซ้ำ/ว่างเปล่า
             const role1 = process.env.ROLE_ID || 'role_1';
             const role2 = process.env.ROLE_ID_2 || 'role_2';
             const role3 = process.env.ROLE_ID_3 || 'role_3';
@@ -212,63 +160,42 @@ client.on(Events.InteractionCreate, async (interaction) => {
                 .setMinValues(1)
                 .setMaxValues(2)
                 .addOptions(
-                    {
-                        label: 'แก๊งค์อนุรักษ์69',
-                        description: 'สมาชิกปีการศึกษา69',
-                        value: role1
-                    },
-                    {
-                        label: 'แก๊งค์พี่กระทิง(ศิษย์เก่า)',
-                        description: 'ศิษย์เก่า and the gang',
-                        value: role2 !== role1 ? role2 : `\${role2}_fallback`
-                    },
-                    {
-                        label: 'แก๊งค์บอด69',
-                        description: 'ลู้มือ',
-                        value: role3 !== role1 && role3 !== role2 ? role3 : `\${role3}_fallback`
-                    },
-                    {
-                        label: 'ดูนก',
-                        description: 'ให้ยศดูนก',
-                        value: role4 !== role1 && role4 !== role2 && role4 !== role3 ? role4 : `\${role4}_fallback`
-                    }
+                    { label: 'แก๊งค์อนุรักษ์69', description: 'สมาชิกปีการศึกษา69', value: role1 },
+                    { label: 'แก๊งค์พี่กระทิง(ศิษย์เก่า)', description: 'ศิษย์เก่า and the gang', value: role2 !== role1 ? role2 : `\${role2}_fallback` },
+                    { label: 'แก๊งค์บอด69', description: 'ลู้มือ', value: role3 !== role1 && role3 !== role2 ? role3 : `\${role3}_fallback` },
+                    { label: 'ดูนก', description: 'ให้ยศดูนก', value: role4 !== role1 && role4 !== role2 && role4 !== role3 ? role4 : `\${role4}_fallback` }
                 );
 
-            const actionRow = new ActionRowBuilder().addComponents(gangSelectMenu);
-
-            return await interaction.reply({ 
+            return await interaction.editReply({ 
                 content: `✅ เปลี่ยนชื่อเป็น **\${newNickname}** เรียบร้อย!\n\n**ขั้นตอนสุดท้าย:** แก๊งค์ไหนอะเรา จิ้มๆเลือกมาซิ👇`, 
-                components: [actionRow],
-                ephemeral: true 
+                components: [new ActionRowBuilder().addComponents(gangSelectMenu)]
             });
 
         } catch (error) {
-            console.error('❌ Error during Step 3:', error);
-            return await interaction.reply({ 
-                content: `❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: \`${error.message}\``, 
-                ephemeral: true 
+            console.error('❌ Error Step 3:', error);
+            return await interaction.editReply({ 
+                content: `❌ เกิดข้อผิดพลาดในการเปลี่ยนชื่อ: \`${error.message}\``
             });
         }
     }
 
-    // -----------------------------------------------------------------
-    // Step 4: Gang Selected -> Assign Roles and Finalize
-    // -----------------------------------------------------------------
+    // Step 4: เลือกแก๊งค์ -> มอบยศ
     if (interaction.isStringSelectMenu() && interaction.customId === 'role_select_menu') {
+        await interaction.deferUpdate();
+
         try {
-            // กรองเอาเฉพาะ ID ยศที่ถูกต้อง
             const selectedRoles = interaction.values.filter(roleId => !roleId.includes('_fallback') && !roleId.startsWith('role_'));
             
             if (selectedRoles.length > 0) {
                 await interaction.member.roles.add(selectedRoles);
             }
 
-            return await interaction.update({ 
+            return await interaction.editReply({ 
                 content: '🎉 ยืนยันตัวตนสมบูรณ์! เข้าไปพูดคุยในห้องต่างๆ ได้เลยย', 
                 components: [] 
             });
         } catch (error) {
-            console.error('❌ Error assigning gang roles:', error);
+            console.error('❌ Error Step 4:', error);
             return await interaction.followUp({ 
                 content: `❌ เกิดข้อผิดพลาดในการมอบยศ: \`${error.message}\``, 
                 ephemeral: true 
@@ -277,22 +204,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 });
 
-// =====================================================================
-// Discord Client Login
-// =====================================================================
-client.login(process.env.BOT_TOKEN).catch(error => {
-    console.error('❌ Failed to login to Discord. Please check your BOT_TOKEN:', error.message);
-});
+client.login(process.env.BOT_TOKEN).catch(error => console.error('❌ Login error:', error.message));
 
-// =====================================================================
-// Health Check Server (Keep-alive for Render/Hosting)
-// =====================================================================
 const http = require('http');
 const PORT = process.env.PORT || 3000;
-
 http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('Bot is alive and running!\n');
-}).listen(PORT, () => {
-    console.log(`🌐 Health check server listening on port ${PORT}`);
-});
+}).listen(PORT, () => console.log(`🌐 Health check server listening on port ${PORT}`));
